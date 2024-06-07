@@ -64,6 +64,13 @@ get_scripts() {
 
     # Remove temp dir
     rm -rf $temp_dir
+
+    cd $script_path/magisk_files/
+}
+
+clean_files() {
+    find $script_path/magisk_files/ -type f ! -name "*.img" ! -name ".*" -delete
+    find $script_path/magisk_files/ -type f -name "*.img" -exec mv {} $script_path/out/ \;
 }
 
 path_boot() {
@@ -77,7 +84,7 @@ path_boot() {
     echo "Setting up env variables"
     setup_env
 
-    # exec scripts
+    clean_files
 }
 
 path_boot
