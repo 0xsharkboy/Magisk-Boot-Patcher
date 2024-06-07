@@ -20,6 +20,30 @@ check_dependencies() {
     done
 }
 
+setup_env() {
+    export KEEPVERITY=true
+    export KEEPFORCEENCRYPT=true
+}
+
+patch_scripts() {
+    # Get line
+    line=$(grep -n '/proc/self/fd/$OUTFD' util_functions.sh | awk '{print $1}' | sed 's/.$//')
+
+    # Add echo "$1" and delete the line
+    (
+    echo "$line"
+    echo 'd'
+    echo "$line-1"
+    echo a
+    echo '    echo "$1"'
+    echo .
+    echo wq
+    ) | ed util_functions.sh > /dev/null 2>&1
+
+    # Replace getprop
+    sed -i 's/getprop/adb shell getprop/g' util_functions.sh
+}
+
 get_scripts() {
     #Create temp dir
     local temp_dir=$(mktemp -d)
@@ -47,7 +71,10 @@ path_boot() {
     echo "Getting needed scripts and binaries from magisk package"
     get_scripts
 
-    # patch scripts
+    patch_scripts
+
+    echo "Setting up env variables"
+    setup_env
 
     # exec scripts
 }
