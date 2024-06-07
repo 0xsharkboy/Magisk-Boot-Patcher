@@ -10,7 +10,7 @@ fi
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 check_dependencies() {
-    programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed")
+    programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
 
     for program in "${programs[@]}"; do
         if ! command -v "$program" >/dev/null 2>&1; then
