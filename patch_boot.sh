@@ -56,6 +56,7 @@ get_scripts() {
     unzip ./Magisk-v*.apk -d $temp_dir >/dev/null 2>&1
     cp $temp_dir/assets/boot_patch.sh $script_path/magisk_files/boot_patch.sh
     cp $temp_dir/assets/util_functions.sh $script_path/magisk_files/util_functions.sh
+    cp $temp_dir/assets/stub.apk $script_path/magisk_files/stub.apk
     cp $temp_dir/lib/x86_64/libmagiskboot.so $script_path/magisk_files/magiskboot
     cp $temp_dir/lib/armeabi-v7a/libmagisk32.so $script_path/magisk_files/magisk32
     cp $temp_dir/lib/arm64-v8a/libmagisk64.so $script_path/magisk_files/magisk64
