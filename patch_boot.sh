@@ -41,6 +41,12 @@ check_dependencies() {
 setup_env() {
     export KEEPVERITY=true
     export KEEPFORCEENCRYPT=true
+
+    if grep -q "vbmeta.img" "${script_path}/magisk_files/updater-script"; then
+        export PATCHVBMETAFLAG=true
+    else
+        export PATCHVBMETAFLAG=false
+    fi
 }
 
 patch_scripts() {
@@ -97,6 +103,7 @@ get_files() {
     brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
     python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
     sudo debugfs -R "dump system/build.prop $script_path/magisk_files/build.prop" "$temp_dir/system.img" &>/dev/null
+    cp "$temp_dir/META-INF/com/google/android/updater-script" "$script_path/magisk_files/"
 
     rm -rf "$temp_dir"
 }
