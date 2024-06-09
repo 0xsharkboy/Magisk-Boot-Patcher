@@ -1,21 +1,38 @@
 #!/bin/bash
 
+# Usage message
+usage() {
+    echo "Usage: $0 <path_to_zip_package>"
+    exit 1
+}
+
+# Argument check
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+zip_package="$(realpath "$1")"
+
+# Check if the argument is a .zip file
+if [[ "$zip_package" != *.zip ]]; then
+    echo "Please provide zip package as argument"
+    usage
+fi
+
 # Sudo check
-if [ `whoami` = root ];
-then
+if [ "$(whoami)" = root ]; then
     echo "Don't run this script as root"
     exit 1
 fi
 
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
-zip_package="$(realpath $1)"
 
 check_dependencies() {
-    programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
+    local programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
 
     for program in "${programs[@]}"; do
-        if ! command -v "$program" >/dev/null 2>&1; then
-            echo "$program is not installed. Please install it and run again this script"
+        if ! command -v "$program" &>/dev/null; then
+            echo "$program is not installed. Please install it and run this script again."
             exit 1
         fi
     done
@@ -27,8 +44,11 @@ setup_env() {
 }
 
 patch_scripts() {
-    # Get line
-    line=$(grep -n '/proc/self/fd/$OUTFD' util_functions.sh | awk '{print $1}' | sed 's/.$//')
+    local util_file="${script_path}/magisk_files/util_functions.sh"
+    local patch_file="${script_path}/magisk_files/boot_patch.sh"
+    
+    # Get line number
+    local line=$(grep -n '/proc/self/fd/$OUTFD' "$util_file" | cut -d: -f1)
 
     # Add echo "$1" and delete the line
     (
@@ -39,76 +59,80 @@ patch_scripts() {
     echo '    echo "$1"'
     echo .
     echo wq
-    ) | ed util_functions.sh > /dev/null 2>&1
+    ) | ed $script_path/magisk_files/util_functions.sh > /dev/null 2>&1
 
     # Replace build.prop path
-    sed -i 's/\/system\/build.prop/.\/build.prop/g' util_functions.sh
+    sed -i 's/\/system\/build.prop/.\/build.prop/g' "$util_file"
+
+    # Use sudo for chmod to be able to use it on the extracted build.prop
+    sed -i 's/chmod/sudo chmod/g' "$patch_file"
 }
 
 get_files() {
-    #Create temp dir
-    local temp_dir="$(pwd)/temp"
-    mkdir $temp_dir
-    cd $temp_dir
+    local temp_dir="$(mktemp -d)"
 
-    # Download magisk package
-    wget $(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d\" -f4) > /dev/null 2>&1
+    # Download and unzip Magisk package
+    local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d\" -f4)
+    wget "$magisk_url" -O "$temp_dir/Magisk.apk" &>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Failed to download Magisk. Please check your internet connection and try again."
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+    unzip "$temp_dir/Magisk.apk" -d "$temp_dir" &>/dev/null
 
-    # Unzip Magisk and get script and binaries
-    unzip ./Magisk-v*.apk -d $temp_dir >/dev/null 2>&1
-    mkdir $script_path/magisk_files/
-    cp $temp_dir/assets/boot_patch.sh $script_path/magisk_files/boot_patch.sh
-    cp $temp_dir/assets/util_functions.sh $script_path/magisk_files/util_functions.sh
-    cp $temp_dir/assets/stub.apk $script_path/magisk_files/stub.apk
-    cp $temp_dir/lib/x86_64/libmagiskboot.so $script_path/magisk_files/magiskboot
-    cp $temp_dir/lib/armeabi-v7a/libmagisk32.so $script_path/magisk_files/magisk32
-    cp $temp_dir/lib/arm64-v8a/libmagisk64.so $script_path/magisk_files/magisk64
-    cp $temp_dir/lib/arm64-v8a/libmagiskinit.so $script_path/magisk_files/magiskinit
+    mkdir -p "$script_path/magisk_files/"
+    cp "$temp_dir/assets/boot_patch.sh" "$script_path/magisk_files/"
+    cp "$temp_dir/assets/util_functions.sh" "$script_path/magisk_files/"
+    cp "$temp_dir/assets/stub.apk" "$script_path/magisk_files/"
+    cp "$temp_dir/lib/x86_64/libmagiskboot.so" "$script_path/magisk_files/magiskboot"
+    cp "$temp_dir/lib/armeabi-v7a/libmagisk32.so" "$script_path/magisk_files/magisk32"
+    cp "$temp_dir/lib/arm64-v8a/libmagisk64.so" "$script_path/magisk_files/magisk64"
+    cp "$temp_dir/lib/arm64-v8a/libmagiskinit.so" "$script_path/magisk_files/magiskinit"
     find $temp_dir -delete
 
-    # Extract rom: get boot.img and build.prop
-    unzip $zip_package -d $temp_dir > /dev/null 2>&1
-    cp $temp_dir/boot.img $script_path/magisk_files/boot.img
-    brotli --decompress $temp_dir/system.new.dat.br -o $temp_dir/system.new.dat > /dev/null 2>&1
-    python $script_path/sdat2img/sdat2img.py $temp_dir/system.transfer.list $temp_dir/system.new.dat $temp_dir/system.img > /dev/null 2>&1
-    cd $temp_dir
-    sudo debugfs -R "dump system/build.prop build.prop" system.img > /dev/null 2>&1
-    cp $temp_dir/build.prop $script_path/magisk_files/build.prop
+    # Extract ROM: get boot.img and build.prop
+    unzip "$zip_package" -d "$temp_dir" &>/dev/null
+    cp "$temp_dir/boot.img" "$script_path/magisk_files/"
+    brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
+    python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
+    sudo debugfs -R "dump system/build.prop $script_path/magisk_files/build.prop" "$temp_dir/system.img" &>/dev/null
 
-    # Remove temp dir
-    rm -rf $temp_dir
+    rm -rf "$temp_dir"
+}
 
-    cd $script_path/magisk_files/
+get_props() {
+    local REGEX="s/^$1=//p"
+    local FILE="$script_path/magisk_files/build.prop"
+
+    cat $FILE 2>/dev/null | dos2unix | sed -n "$REGEX" | head -n 1
 }
 
 clean_files() {
-    patched_name="magisk_patched_$(tr -dc A-Za-z0-9 </dev/urandom | head -c 5).img"
+    patched_name="magisk_$(get_props "ro.build.product")_$(tr -dc A-Za-z0-9 </dev/urandom | head -c 5).img"
 
-    # Move patched boot.img in out folder
-    mv new-boot.img $script_path/out/$patched_name
+    # Move patched boot.img to output folder
+    mv "$script_path/magisk_files/new-boot.img" "$script_path/out/$patched_name"
 
     # Clean Magisk files
-    rm -rf $script_path/magisk_files/
+    rm -rf "$script_path/magisk_files/"
 }
 
-path_boot() {
+patch_boot() {
     check_dependencies
 
     echo "Getting needed files from Magisk and zip package..."
     get_files
-    echo ""
 
-    echo "Patching Magisk utils script..."
-    echo ""
+    echo "Patching Magisk util scripts..."
     patch_scripts
 
     echo "Patching boot.img..."
-    echo ""
     setup_env
-    sh boot_patch.sh boot.img > /dev/null 2>&1
+    sh "$script_path/magisk_files/boot_patch.sh" "$script_path/magisk_files/boot.img" &>/dev/null
 
     clean_files
-    echo "Done ! Patched boot.img can be found at out/${patched_name}"
+    echo "Done! Patched boot.img can be found at out/${patched_name}"
 }
 
-path_boot
+patch_boot
