@@ -28,7 +28,7 @@ fi
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 check_dependencies() {
-    local programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
+    local programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli" "abootimg" "lz4" "cpio")
 
     for program in "${programs[@]}"; do
         if ! command -v "$program" &>/dev/null; then
@@ -104,6 +104,23 @@ get_files() {
     python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
     sudo debugfs -R "dump system/build.prop $script_path/magisk_files/build.prop" "$temp_dir/system.img" &>/dev/null
     cp "$temp_dir/META-INF/com/google/android/updater-script" "$script_path/magisk_files/"
+
+    # Extract fstab from boot.img
+    cd $temp_dir/
+    abootimg -x $temp_dir/boot.img &>/dev/null
+    mkdir "$temp_dir/boot"
+    cd "$temp_dir/boot/"
+    if file "$temp_dir/initrd.img" | grep -q "LZ4"; then
+        lz4 -d "$temp_dir/initrd.img" "$temp_dir/initrd.img.uncompressed" &>/dev/null
+        cpio -idmv < "$temp_dir/initrd.img.uncompressed" &>/dev/null
+    else
+        zcat "$temp_dir/initrd.img" | cpio -idmv &>/dev/null
+    fi
+    local fstab="$(find ./ -type f -name 'fstab.*')"
+    if [ ! -z "$fstab" ]; then
+        cp "$fstab" "$script_path/magisk_files/fstab"
+    fi
+    cd $script_path
 
     rm -rf "$temp_dir"
 }
