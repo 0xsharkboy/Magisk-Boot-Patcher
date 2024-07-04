@@ -39,8 +39,8 @@ check_dependencies() {
 }
 
 setup_env() {
-    export KEEPVERITY=true
-    export KEEPFORCEENCRYPT=true
+    [ -z $KEEPVERITY ] && export KEEPVERITY=true
+    [ -z $KEEPFORCEENCRYPT ] && export KEEPFORCEENCRYPT=true
 
     if grep -q "vbmeta.img" "${script_path}/magisk_files/updater-script"; then
         export PATCHVBMETAFLAG=true
