@@ -102,8 +102,16 @@ get_files() {
     cp "$temp_dir/boot.img" "$script_path/magisk_files/"
     brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
     python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
-    # TODO can't dump erofs systems with debugfs
-    sudo debugfs -R "dump system/build.prop $script_path/magisk_files/build.prop" "$temp_dir/system.img" &>/dev/null
+    if [[ $(file "$temp_dir/system.img") == *EROFS* ]]; then
+        echo "EROFS system detected, mounting system.img to extract build.prop"
+        temp_mount_dir=$(mktemp -d)
+        sudo mount -t erofs "$temp_dir/system.img" "$temp_mount_dir"
+        sudo cp "$temp_mount_dir/system/build.prop" "$output_file"
+        sudo umount "$temp_mount_dir"
+        rm -rf "$temp_mount_dir"
+    else
+        sudo debugfs -R "dump system/build.prop $script_path/magisk_files/build.prop" "$temp_dir/system.img" &>/dev/null
+    fi
     cp "$temp_dir/META-INF/com/google/android/updater-script" "$script_path/magisk_files/"
 
     rm -rf "$temp_dir"
