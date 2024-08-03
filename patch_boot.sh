@@ -106,7 +106,7 @@ get_files() {
         echo "EROFS system detected, mounting system.img to extract build.prop"
         temp_mount_dir=$(mktemp -d)
         sudo mount -t erofs "$temp_dir/system.img" "$temp_mount_dir"
-        sudo cp "$temp_mount_dir/system/build.prop" "$output_file"
+        sudo cp "$temp_mount_dir/system/build.prop" "$script_path/magisk_files/build.prop"
         sudo umount "$temp_mount_dir"
         rm -rf "$temp_mount_dir"
     else
