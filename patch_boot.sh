@@ -97,14 +97,16 @@ get_files() {
     cp "$temp_dir/lib/arm64-v8a/libmagiskinit.so" "$script_path/magisk_files/magiskinit"
     find $temp_dir -delete
 
-    # Extract ROM: get boot.img and build.prop
+    # Extract ROM: get boot.img
     unzip "$zip_package" -d "$temp_dir" &>/dev/null
     cp "$temp_dir/boot.img" "$script_path/magisk_files/"
+
+    # Extract build.prop
     brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
     python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
     if [[ $(file "$temp_dir/system.img") == *EROFS* ]]; then
         echo "EROFS system detected, mounting system.img to extract build.prop"
-        temp_mount_dir=$(mktemp -d)
+        local temp_mount_dir=$(mktemp -d)
         sudo mount -t erofs "$temp_dir/system.img" "$temp_mount_dir"
         sudo cp "$temp_mount_dir/system/build.prop" "$script_path/magisk_files/build.prop"
         sudo umount "$temp_mount_dir"
