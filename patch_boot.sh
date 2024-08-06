@@ -12,6 +12,12 @@ if [ "$(whoami)" != root ]; then
     exit 1
 fi
 
+if [ "$1" = "-k" ]; then
+  variant="kitsune"
+else
+  variant="magisk"
+fi
+
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
@@ -60,8 +66,13 @@ get_magisk_files() {
     local temp_dir="$(mktemp -d)"
 
     # Download and extract Magisk
-    local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d\" -f4)
+    if [ "$variant" = "kitsune" ]; then
+        local magisk_url=$(curl -s https://raw.githubusercontent.com/HuskyDG/magisk-files/main/canary.json | jq -r ".magisk.link")
+    else
+        local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d\" -f4)
+    fi
 
+    echo "Downloading ${variant} from ${magisk_url}..."
     wget "$magisk_url" -O "$temp_dir/Magisk.apk" &>/dev/null
     if [ $? -ne 0 ]; then
         echo "Failed to download Magisk. Please check your internet connection and try again."
@@ -119,7 +130,7 @@ get_props() {
 }
 
 move_patched() {
-    patched_name="magisk_$(get_props "ro.build.product")_$(tr -dc A-Za-z0-9 < /dev/urandom | head -c 5).img"
+    patched_name="${variant}_$(get_props "ro.build.product")_$(tr -dc A-Za-z0-9 < /dev/urandom | head -c 5).img"
 
     # Move patched boot.img to output folder
     mv "$script_path/magisk_files/new-boot.img" "$script_path/out/$patched_name"
@@ -132,13 +143,16 @@ clean_files () {
 }
 
 patch_boot() {
-    echo "Getting needed files from Magisk..."
+    echo "Getting needed files from ${variant}..."
     get_magisk_files
 
-    echo "Patching Magisk util scripts..."
+    echo "Patching ${variant} util scripts..."
     patch_scripts
 
     for zip_package in "$@"; do
+        if [[ $zip_package == "-k" ]]; then
+          continue
+        fi
         echo -e "\nProcessing $zip_package..."
         echo "---------------------------------------------"
         if [[ "$zip_package" != *.zip ]]; then
