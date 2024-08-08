@@ -6,7 +6,6 @@ This script is designed to extract the `boot.img` from an Android ROM installati
 
 The script works by extracting binaries from the Magisk APK and utilizing them, along with the boot image patch script provided by Magisk, to perform the patching process. This approach replicates the patching process that would typically occur on an Android device, taking into account various factors such as:
 
-- Partition encryption
 - Presence of `vbmeta`
 - Whether the ROM is encrypted, etc.
 
