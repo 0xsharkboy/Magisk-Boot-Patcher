@@ -19,7 +19,7 @@ The inspiration for this script came from my interest in the Magisk patching pro
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/0xsharkboy/Magisk-Boot-Patcher && cd Magisk-Boot-Patcher
+   git clone --recurse-submodules https://github.com/0xsharkboy/Magisk-Boot-Patcher && cd Magisk-Boot-Patcher
    ```
 2. Make the script executable:
    ```bash
