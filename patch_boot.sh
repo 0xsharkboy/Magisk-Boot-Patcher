@@ -102,8 +102,10 @@ get_rom_files() {
     cp "$temp_dir/boot.img" "$script_path/magisk_files/"
 
     # Extract build.prop
-    brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
-    python "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
+    if [[ -f "$temp_dir/system.new.dat.br" ]]; then
+        brotli --decompress "$temp_dir/system.new.dat.br" -o "$temp_dir/system.new.dat" &>/dev/null
+    fi
+    python3 "$script_path/sdat2img/sdat2img.py" "$temp_dir/system.transfer.list" "$temp_dir/system.new.dat" "$temp_dir/system.img" &>/dev/null
     if [[ $(file "$temp_dir/system.img") == *EROFS* ]]; then
         local temp_mount_dir=$(mktemp -d)
 
