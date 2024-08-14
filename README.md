@@ -17,22 +17,34 @@ The inspiration for this script came from my interest in the Magisk patching pro
 
 ## Usage
 
-1. Clone the repository:
-   ```bash
-   git clone --recurse-submodules https://github.com/0xsharkboy/Magisk-Boot-Patcher && cd Magisk-Boot-Patcher
+### 1. Clone the repository:
+```bash
+git clone --recurse-submodules https://github.com/0xsharkboyMagisk-Boot-Patcher && cd Magisk-Boot-Patcher
    ```
-2. Make the script executable:
-   ```bash
-   chmod +x patch_boot.sh
-   ```
-3. Run the script with root privileges:
-   ```bash
-   sudo ./patch_boot.sh [rom_package.zip, ...]
-   ```
-- To patch with Kitsune instead of Magisk, use the `-k` flag:
-   ```bash
-   sudo ./patch_boot.sh -k [rom_package.zip, ...]
-   ```
+### 2. Make the script executable:
+```bash
+chmod +x patch_boot.sh
+```
+
+### 3. Install dependencies:
+- On DEBIAN/Ubuntu based distros:
+```bash
+sudo apt install $(cat dependencies)
+```
+- On Arch based distros (with yay):
+```bash
+yay -S $(cat dependencies)
+```
+
+### 4. Run the script with root privileges:
+- To patch with Magisk:
+```bash
+sudo ./patch_boot.sh [rom_package.zip, ...]
+```
+- To patch with Kitsune, use the `-k` flag:
+```bash
+sudo ./patch_boot.sh -k [rom_package.zip, ...]
+```
 
 ## Testing and Feedback
 
