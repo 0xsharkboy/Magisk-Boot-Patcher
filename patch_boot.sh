@@ -20,7 +20,7 @@ fi
 
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-programs=("adb" "fastboot" "dos2unix" "unzip" "curl" "ed" "brotli")
+programs=("adb" "brotli" "curl" "dos2unix" "ed" "fastboot" "file" "jq" "python3" "unzip")
 
 # Check if all required programs are installed
 for program in "${programs[@]}"; do
