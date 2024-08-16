@@ -61,3 +61,7 @@ This script is intended for users with advanced knowledge of Android ROMs and cu
 ## Credits
  - [sdat2img](https://github.com/xpirt/sdat2img/tree/master) by [@xpirt](https://github.com/xpirt)
  - [magisk_for_linux](https://github.com/daboynb/magisk_for_linux) by [@daboynb](https://github.com/daboynb)
+
+## Support
+[<img src="https://github.com/user-attachments/assets/b05920cb-22d5-4db3-9033-e81ae6911a0b" width="200px" />](https://ko-fi.com/0xsharkboy)
+
