@@ -132,10 +132,12 @@ get_props() {
 }
 
 move_patched() {
-    patched_name="${variant}_$(get_props "ro.build.product")_$(tr -dc A-Za-z0-9 < /dev/urandom | head -c 5).img"
+    patched_name="$(get_props "ro.build.product")_$(tr -dc A-Za-z0-9 < /dev/urandom | head -c 5).img"
 
     # Move patched boot.img to output folder
-    mv "$script_path/magisk_files/new-boot.img" "$script_path/out/$patched_name"
+    mv "$script_path/magisk_files/new-boot.img" "$script_path/out/${variant}_${patched_name}"
+
+    mv "$script_path/magisk_files/boot.img" "$script_path/out/stock_$patched_name"
 }
 
 clean_files () {
@@ -169,7 +171,7 @@ patch_boot() {
 
             move_patched
             clean_files
-            echo "Done! Patched boot.img can be found at out/${patched_name}"
+            echo "Done! Patched boot.img can be found at out/${variant}_${patched_name}"
         fi
     done
 
