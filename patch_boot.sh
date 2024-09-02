@@ -35,9 +35,9 @@ setup_env() {
     [ -z $KEEPFORCEENCRYPT ] && export KEEPFORCEENCRYPT=true
 
     if grep -q "vbmeta.img" "${script_path}/magisk_files/updater-script"; then
-        export PATCHVBMETAFLAG=true
-    else
         export PATCHVBMETAFLAG=false
+    else
+        export PATCHVBMETAFLAG=true
     fi
 }
 
