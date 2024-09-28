@@ -14,6 +14,8 @@ fi
 
 if [ "$1" = "-k" ]; then
   variant="kitsune"
+elif [ "$1" = "-c" ]; then
+  variant="canary"
 else
   variant="magisk"
 fi
@@ -68,8 +70,10 @@ get_magisk_files() {
     # Download and extract Magisk
     if [ "$variant" = "kitsune" ]; then
         local magisk_url=$(curl -s https://raw.githubusercontent.com/HuskyDG/magisk-files/main/canary.json | jq -r ".magisk.link")
+    elif [ "$varianr" = "canary" ]; then
+        local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases | grep 'browser_download_url' | grep 'canary' | grep 'app-release.apk' | head -n 1 | cut -d \" -f 4)
     else
-        local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d\" -f4)
+        local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d \" -f 4)
     fi
 
     echo "Downloading ${variant} from ${magisk_url}..."
@@ -154,7 +158,7 @@ patch_boot() {
     patch_scripts
 
     for zip_package in "$@"; do
-        if [[ $zip_package == "-k" ]]; then
+        if [[ $zip_package == "-k" || "$zip_package" == "-c" ]]; then
           continue
         fi
         echo -e "\nProcessing $zip_package..."
