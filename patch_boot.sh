@@ -91,8 +91,13 @@ get_magisk_files() {
     cp "$temp_dir/assets/util_functions.sh" "$script_path/magisk_files/"
     cp "$temp_dir/assets/stub.apk" "$script_path/magisk_files/"
     cp "$temp_dir/lib/x86_64/libmagiskboot.so" "$script_path/magisk_files/magiskboot"
-    cp "$temp_dir/lib/armeabi-v7a/libmagisk32.so" "$script_path/magisk_files/magisk32"
-    cp "$temp_dir/lib/arm64-v8a/libmagisk64.so" "$script_path/magisk_files/magisk64"
+    if [ "$variant" = "kitsune" ]; then
+        cp "$temp_dir/lib/armeabi-v7a/libmagisk32.so" "$script_path/magisk_files/magisk32"
+        cp "$temp_dir/lib/arm64-v8a/libmagisk64.so" "$script_path/magisk_files/magisk64"
+    else
+        cp "$temp_dir/lib/armeabi-v7a/libmagisk.so" "$script_path/magisk_files/magisk32"
+        cp "$temp_dir/lib/arm64-v8a/libmagisk.so" "$script_path/magisk_files/magisk64"
+    fi
     cp "$temp_dir/lib/arm64-v8a/libmagiskinit.so" "$script_path/magisk_files/magiskinit"
 
     rm -rf "$temp_dir"
