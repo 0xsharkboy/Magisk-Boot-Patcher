@@ -70,7 +70,7 @@ get_magisk_files() {
     # Download and extract Magisk
     if [ "$variant" = "kitsune" ]; then
         local magisk_url=$(curl -s https://raw.githubusercontent.com/HuskyDG/magisk-files/main/canary.json | jq -r ".magisk.link")
-    elif [ "$varianr" = "canary" ]; then
+    elif [ "$variant" = "canary" ]; then
         local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases | grep 'browser_download_url' | grep 'canary' | grep 'app-release.apk' | head -n 1 | cut -d \" -f 4)
     else
         local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d \" -f 4)
