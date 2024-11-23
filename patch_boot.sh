@@ -12,9 +12,7 @@ if [ "$(whoami)" != root ]; then
     exit 1
 fi
 
-if [ "$1" = "-k" ]; then
-  variant="kitsune"
-elif [ "$1" = "-c" ]; then
+if [ "$1" = "-c" ]; then
   variant="canary"
 else
   variant="magisk"
@@ -22,7 +20,8 @@ fi
 
 script_path="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-programs=("adb" "brotli" "curl" "dos2unix" "ed" "fastboot" "file" "jq" "python3" "unzip")
+#programs=("adb" "brotli" "curl" "dos2unix" "ed" "fastboot" "file" "jq" "python3" "unzip")
+programs=()
 
 # Check if all required programs are installed
 for program in "${programs[@]}"; do
@@ -68,9 +67,7 @@ get_magisk_files() {
     local temp_dir="$(mktemp -d)"
 
     # Download and extract Magisk
-    if [ "$variant" = "kitsune" ]; then
-        local magisk_url=$(curl -s https://raw.githubusercontent.com/HuskyDG/magisk-files/main/canary.json | jq -r ".magisk.link")
-    elif [ "$variant" = "canary" ]; then
+    if [ "$variant" = "canary" ]; then
         local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases | grep 'browser_download_url' | grep 'canary' | grep 'app-release.apk' | head -n 1 | cut -d \" -f 4)
     else
         local magisk_url=$(curl -s https://api.github.com/repos/topjohnwu/Magisk/releases/latest | grep 'browser_download_url' | cut -d \" -f 4)
@@ -91,13 +88,8 @@ get_magisk_files() {
     cp "$temp_dir/assets/util_functions.sh" "$script_path/magisk_files/"
     cp "$temp_dir/assets/stub.apk" "$script_path/magisk_files/"
     cp "$temp_dir/lib/x86_64/libmagiskboot.so" "$script_path/magisk_files/magiskboot"
-    if [ "$variant" = "kitsune" ]; then
-        cp "$temp_dir/lib/armeabi-v7a/libmagisk32.so" "$script_path/magisk_files/magisk32"
-        cp "$temp_dir/lib/arm64-v8a/libmagisk64.so" "$script_path/magisk_files/magisk64"
-    else
-        cp "$temp_dir/lib/armeabi-v7a/libmagisk.so" "$script_path/magisk_files/magisk32"
-        cp "$temp_dir/lib/arm64-v8a/libmagisk.so" "$script_path/magisk_files/magisk64"
-    fi
+    cp "$temp_dir/lib/armeabi-v7a/libmagisk.so" "$script_path/magisk_files/magisk32"
+    cp "$temp_dir/lib/arm64-v8a/libmagisk.so" "$script_path/magisk_files/magisk64"
     cp "$temp_dir/lib/arm64-v8a/libmagiskinit.so" "$script_path/magisk_files/magiskinit"
 
     rm -rf "$temp_dir"
@@ -176,7 +168,7 @@ patch_boot() {
 
             echo "Patching boot.img..."
             setup_env
-            sh "$script_path/magisk_files/boot_patch.sh" "$script_path/magisk_files/boot.img" &>/dev/null
+            sh "$script_path/magisk_files/boot_patch.sh" "$script_path/magisk_files/boot.img" #&>/dev/null
 
             move_patched
             clean_files
