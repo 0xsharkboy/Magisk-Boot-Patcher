@@ -141,12 +141,6 @@ move_patched() {
     mv "$script_path/magisk_files/boot.img" "$script_path/out/stock_$patched_name"
 }
 
-clean_files () {
-    rm -f "$script_path/magisk_files/boot.img"
-    rm -f "$script_path/magisk_files/build.prop"
-    rm -f "$script_path/magisk_files/updater-script"
-}
-
 patch_boot() {
     echo "Getting needed files from ${variant}..."
     get_magisk_files
@@ -168,10 +162,9 @@ patch_boot() {
 
             echo "Patching boot.img..."
             setup_env
-            sh "$script_path/magisk_files/boot_patch.sh" "$script_path/magisk_files/boot.img" #&>/dev/null
+            sh "$script_path/magisk_files/boot_patch.sh" "$script_path/magisk_files/boot.img" &>/dev/null
 
             move_patched
-            clean_files
             echo "Done! Patched boot.img can be found at out/${variant}_${patched_name}"
         fi
     done
